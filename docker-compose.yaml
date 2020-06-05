@@ -1,0 +1,8 @@
+version: '3'
+services:
+  pipeline:
+    build: .
+    tty: true
+    stdin_open: true
+    env_file:
+      - credentials.env
