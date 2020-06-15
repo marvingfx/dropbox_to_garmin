@@ -6,7 +6,7 @@ This is a container that listens to changes in your dropbox folder. It will down
 ## Usage
 * Create a Dropbox app from the instructions from https://www.dropbox.com/developers/apps/create. Choose the regular Dropbox API. Choose "Full Dropbox" for the access type.
 * Clone the repo
-* Create a file called `credentials.env` in the root of the project with the following information. You can get the token via the app console (use the "Generated access token" functionality). You may also use your key and secret to make an authentication script to get the token. 
+* Create a file called `credentials.env` in the root of the project with the following information. You can get the token via the app console (use the "Generated access token" functionality). You may also use your key and secret to make an authentication script to get the token. Enter these variables in the appropriate section if running on Google Cloud (Cloud Run).
 ```
 #DROPBOX_APP_KEY=key
 #DROPBOX_APP_SECRET=secret
