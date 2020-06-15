@@ -17,7 +17,7 @@ PORT = os.environ.get('PORT', 8080)
 app = flask.Flask(__name__)
 
 
-@app.route('/dropbox')
+@app.route('/dropbox', methods=['GET', 'POST'])
 def handle_dropbox_request():
     challenge_header = request.args.get('challenge')
     if challenge_header is not None:
