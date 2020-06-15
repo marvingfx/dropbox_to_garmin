@@ -17,27 +17,6 @@ PORT = os.environ.get('PORT', 8080)
 app = flask.Flask(__name__)
 
 
-@app.route('/dropbox', methods=['GET', 'POST'])
-def handle_dropbox_request():
-    challenge_header = request.args.get('challenge')
-    if challenge_header is not None:
-        response = Response(request.args.get('challenge'))
-        response.headers['Content-Type'] = 'text/plain'
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        return response
-
-    signature_header = request.headers.get('X-Dropbox-Signature')
-    if signature_header is None or not hmac.compare_digest(signature_header, hmac.new(str.encode(DROPBOX_APP_SECRET), request.data, sha256).hexdigest()):
-        return flask.abort(403)
-
-    sync_dropbox_to_garmin()
-    return Response('successfully connected to garmin and dropbox and synced files')
-
-
-if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=int(PORT))
-
-
 def filter_files(metadata: dropbox.dropbox.files.Metadata) -> bool:
     # TODO add multiple filter criteria (such as has been downloaded already)
     return isinstance(metadata, dropbox.dropbox.files.FileMetadata)
@@ -82,3 +61,24 @@ def sync_dropbox_to_garmin():
                 print(f"Could not upload activity: {e}")
 
         garmin_connect_client.disconnect()
+
+
+@app.route('/dropbox', methods=['GET', 'POST'])
+def handle_dropbox_request():
+    challenge_header = request.args.get('challenge')
+    if challenge_header is not None:
+        response = Response(request.args.get('challenge'))
+        response.headers['Content-Type'] = 'text/plain'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
+
+    signature_header = request.headers.get('X-Dropbox-Signature')
+    if signature_header is None or not hmac.compare_digest(signature_header, hmac.new(str.encode(DROPBOX_APP_SECRET), request.data, sha256).hexdigest()):
+        return flask.abort(403)
+
+    sync_dropbox_to_garmin()
+    return Response('successfully connected to garmin and dropbox and synced files')
+
+
+if __name__ == "__main__":
+    app.run(debug=True, host='0.0.0.0', port=int(PORT))
