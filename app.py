@@ -12,6 +12,7 @@ DROPBOX_APP_SECRET = os.environ.get("DROPBOX_APP_SECRET")
 DROPBOX_APP_TOKEN = os.environ.get("DROPBOX_APP_TOKEN")
 GARMIN_USERNAME = os.environ.get("GARMIN_USERNAME")
 GARMIN_PASSWORD = os.environ.get("GARMIN_PASSWORD")
+PORT = os.environ.get('PORT', 8080)
 
 app = flask.Flask(__name__)
 
@@ -34,7 +35,7 @@ def handle_dropbox_request():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    app.run(debug=True, host='0.0.0.0', port=int(PORT))
 
 
 def filter_files(metadata: dropbox.dropbox.files.Metadata) -> bool:
