@@ -1,6 +1,10 @@
-import dropbox
-from dropbox import DropboxOAuth2FlowNoRedirect
+import flask
+from flask import Response
+from flask import request
+from hashlib import sha256
 from garminexport import garminclient
+import dropbox
+import hmac
 import os
 
 DROPBOX_APP_KEY = os.environ.get("DROPBOX_APP_KEY")
@@ -8,6 +12,29 @@ DROPBOX_APP_SECRET = os.environ.get("DROPBOX_APP_SECRET")
 DROPBOX_APP_TOKEN = os.environ.get("DROPBOX_APP_TOKEN")
 GARMIN_USERNAME = os.environ.get("GARMIN_USERNAME")
 GARMIN_PASSWORD = os.environ.get("GARMIN_PASSWORD")
+
+app = flask.Flask(__name__)
+
+
+@app.route('/dropbox')
+def handle_dropbox_request():
+    challenge_header = request.args.get('challenge')
+    if challenge_header is not None:
+        response = Response(request.args.get('challenge'))
+        response.headers['Content-Type'] = 'text/plain'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
+
+    signature_header = request.headers.get('X-Dropbox-Signature')
+    if signature_header is None or not hmac.compare_digest(signature_header, hmac.new(str.encode(DROPBOX_APP_SECRET), request.data, sha256).hexdigest()):
+        return flask.abort(403)
+
+    sync_dropbox_to_garmin()
+    return Response('successfully connected to garmin and dropbox and synced files')
+
+
+if __name__ == "__main__":
+    app.run(debug=True, host='0.0.0.0', port=8080)
 
 
 def filter_files(metadata: dropbox.dropbox.files.Metadata) -> bool:
@@ -25,32 +52,13 @@ def get_dropbox_client(token: str = None, key: str = None, secret: str = None) -
             print(f"Could not use token to authenticate: {e}")
             client = None
 
-    # TODO this part is not working as of now (interactive input in docker containers is hard xD)
-    # if client is None and (key or secret):
-    #     auth_flow = DropboxOAuth2FlowNoRedirect(DROPBOX_APP_KEY, DROPBOX_APP_SECRET)
-    #     auth_url = auth_flow.start()
-    #     print(f"go to {auth_url}")
-    #     auth_code = input("Enter the authorization code here: ").strip()
-    #
-    #     try:
-    #         oauth_result = auth_flow.finish(auth_code)
-    #         access_token = oauth_result.access_token
-    #         expires_at = oauth_result.expires_at
-    #         refresh_token = oauth_result.refresh_token
-    #         client = dropbox.Dropbox(oauth2_access_token=access_token,
-    #                                          oauth2_refresh_token=refresh_token,
-    #                                          oauth2_access_token_expiration=expires_at)
-    #     except Exception as e:
-    #         print(f"Could not authenticate {e}")
-    #         client = None
-
     if client is None:
         raise Exception("Could not authenticate. Did you supply the correct credentials")
 
     return client
 
 
-if __name__ == "__main__":
+def sync_dropbox_to_garmin():
     dropbox_client = get_dropbox_client(token=DROPBOX_APP_TOKEN, key=DROPBOX_APP_KEY, secret=DROPBOX_APP_SECRET)
     all_files_in_folder = dropbox_client.files_list_folder(path="/Apps/WahooFitness").entries
     files_to_download = list(filter(filter_files, all_files_in_folder))
