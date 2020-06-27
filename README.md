@@ -22,4 +22,3 @@ GARMIN_PASSWORD=password
 * The authentication with dropbox is still limited. For now, you will have to generate your own token. In the future there should be a way to pass through your authorization code to generate a token. Saving this token might be handy as well.
 * Keep track of files that are not already downloaded from dropbox/uploaded to garmin connect.
 * Add more flexibility in terms of folders to download to/from.
-* Improve logging.
